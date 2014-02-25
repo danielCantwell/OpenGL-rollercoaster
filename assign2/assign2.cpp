@@ -15,6 +15,7 @@
 #include <iostream>
 #include <GL/glu.h>
 #include <GL/glut.h>
+#include <math.h>
 
 /* represents one control point along the spline */
 struct point {
@@ -38,7 +39,7 @@ int g_iNumOfSplines;
 /* values for gluLookAt */
 double eyeX = 0.0, eyeY = 0.0, eyeZ = 5.0;
 double centerX = 0.0, centerY = 0.0, centerZ = 0.0;
-double upX = 0.0, upY = 1.0, upZ = 0.0;
+double upX = 0.0, upY = 0.0, upZ = 1.0;
 
 /* display list */
 GLuint theSpline;
@@ -147,7 +148,7 @@ void initSkyTexture() {
 /* openGL init */
 void myInit() {
 	// Create spline and store it in display list
-	rollercoasterSpline.numControlPoints = g_Splines[0].numControlPoints * 10;
+	rollercoasterSpline.numControlPoints = g_Splines[0].numControlPoints * 20;
 	rollercoasterSpline.points = new point[rollercoasterSpline.numControlPoints];
 
 	rollercoasterSplineTangents.numControlPoints = rollercoasterSpline.numControlPoints;
@@ -210,7 +211,7 @@ void myInit() {
 		}
 		// multiply by u array to get x y z coords
 		double x = 0, y = 0, z = 0;
-		for (double i = 0.1; i <= 1; i += 0.1) {
+		for (double i = 0.05; i <= 1; i += 0.05) {
 			double u1 = i;
 			double u2 = i * i;
 			double u3 = i * i * i;
@@ -230,7 +231,7 @@ void myInit() {
 		}
 		// multiply by u' array to get x y z tangents
 		double xTan = 0, yTan = 0, zTan = 0;
-		for (double i = 0.1; i <= 1; i += 0.1) {
+		for (double i = 0.05; i <= 1; i += 0.05) {
 			double u0 = 0;
 			double u1 = 1;
 			double u2 = 2 * i;
@@ -372,18 +373,28 @@ void animateRide() {
 	if (pointCount == rollercoasterSpline.numControlPoints) {
 		pointCount = 0;
 	}
-	if (tangentCount == rollercoasterSplineTangents.numControlPoints) {
-		tangentCount = 0;
-	}
 	pointCount++;
-	centerX = rollercoasterSpline.points[pointCount].x;
-	centerY = rollercoasterSpline.points[pointCount].y;
-	centerZ = rollercoasterSpline.points[pointCount].z;
-	tangentCount++;
-	eyeX = rollercoasterSplineTangents.points[tangentCount].x;
-	eyeY = rollercoasterSplineTangents.points[tangentCount].y;
-	eyeZ = rollercoasterSplineTangents.points[tangentCount].z;
+	eyeX = rollercoasterSpline.points[pointCount].x;
+	eyeY = rollercoasterSpline.points[pointCount].y;
+	eyeZ = rollercoasterSpline.points[pointCount].z;
+
+	double x = rollercoasterSplineTangents.points[pointCount].x;
+	double y = rollercoasterSplineTangents.points[pointCount].y;
+	double z = rollercoasterSplineTangents.points[pointCount].z;
+
+	double magnitude = sqrt((x - eyeX)*(x - eyeX) + (y - eyeY)*(y - eyeY) + (z - eyeZ)*(z - eyeZ));
+
+	centerX = (x / magnitude) + eyeX;
+	centerY = y / magnitude + eyeY;
+	centerZ = z / magnitude + eyeZ;
+
+	std::cout << "X :  " << centerX << "   Y :  " << centerY << "   Z :  " << centerZ << std::endl;
 	
+	/*
+	upX = (eyeY * centerZ) - (eyeZ * centerY);
+	upY = (eyeZ * centerX) - (eyeX * centerZ);
+	upZ = (eyeX * centerY) - (eyeY * centerX);
+	*/
 }
 
 /***** MAIN DISPLAY FUNCTION *****/
@@ -431,7 +442,7 @@ void reshape(int w, int h)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	/* Perspective camera view */
-	gluPerspective(60.0, aspect, .01, 100);
+	gluPerspective(60.0, aspect, .1, 1000);
 	glMatrixMode(GL_MODELVIEW);
 }
 
@@ -450,16 +461,16 @@ void keySpecial(int key, int x, int y)
 	case GLUT_ACTIVE_ALT:
 		switch (key) {
 		case GLUT_KEY_UP:
-			eyeZ -= 4.0;
+			eyeZ -= 1.0;
 			break;
 		case GLUT_KEY_DOWN:
-			eyeZ += 4.0;
+			eyeZ += 1.0;
 			break;
 		case GLUT_KEY_LEFT:
-			centerZ -= 4.0;
+			centerZ -= 1.0;
 			break;
 		case GLUT_KEY_RIGHT:
-			centerZ += 4.0;
+			centerZ += 1.0;
 			break;
 		}
 		break;
@@ -467,16 +478,16 @@ void keySpecial(int key, int x, int y)
 	case GLUT_ACTIVE_CTRL:
 		switch (key) {
 		case GLUT_KEY_UP:
-			centerY += 4.0;
+			centerY += 1.0;
 			break;
 		case GLUT_KEY_DOWN:
-			centerY -= 4.0;
+			centerY -= 1.0;
 			break;
 		case GLUT_KEY_LEFT:
-			centerX -= 4.0;
+			centerX -= 1.0;
 			break;
 		case GLUT_KEY_RIGHT:
-			centerX += 4.0;
+			centerX += 1.0;
 			break;
 		}
 		break;
@@ -484,16 +495,16 @@ void keySpecial(int key, int x, int y)
 	case GLUT_ACTIVE_SHIFT:
 		switch (key) {
 		case GLUT_KEY_UP:
-			eyeY += 4.0;
+			eyeY += 1.0;
 			break;
 		case GLUT_KEY_DOWN:
-			eyeY -= 4.0;
+			eyeY -= 1.0;
 			break;
 		case GLUT_KEY_LEFT:
-			eyeX -= 4.0;
+			eyeX -= 1.0;
 			break;
 		case GLUT_KEY_RIGHT:
-			eyeX += 4.0;
+			eyeX += 1.0;
 			break;
 		}
 		break;
@@ -501,20 +512,20 @@ void keySpecial(int key, int x, int y)
 	default:
 		switch (key) {
 		case GLUT_KEY_UP:
-			eyeY += 4.0;
-			centerY += 4.0;
+			eyeY += 1.0;
+			centerY += 1.0;
 			break;
 		case GLUT_KEY_DOWN:
-			eyeY -= 4.0;
-			centerY -= 4.0;
+			eyeY -= 1.0;
+			centerY -= 1.0;
 			break;
 		case GLUT_KEY_LEFT:
-			eyeX -= 4.0;
-			centerX -= 4.0;
+			eyeX -= 1.0;
+			centerX -= 1.0;
 			break;
 		case GLUT_KEY_RIGHT:
-			eyeX += 4.0;
-			centerX += 4.0;
+			eyeX += 1.0;
+			centerX += 1.0;
 			break;
 		}
 		break;
