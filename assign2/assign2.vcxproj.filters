@@ -49,5 +49,8 @@
     <Image Include="skyPic.jpeg">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="woodTexture.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

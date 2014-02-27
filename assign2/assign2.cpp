@@ -46,8 +46,10 @@ GLuint theSpline;
 /* textures */
 GLuint groundTexture;
 GLuint skyTexture;
+GLuint railTexture;
 Pic *imageGround;
 Pic *imageSky;
+Pic *imageRail;
 
 spline rollercoasterSpline;
 int pointCount = 0;
@@ -124,6 +126,26 @@ void initGroundTexture() {
 
 	// load image data stored at pointer "groundPointer" into currently active texture
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1024, 1024, 0, GL_RGB, GL_UNSIGNED_BYTE, imageGround->pix);
+}
+
+void initRailTexture() {
+	imageGround = jpeg_read("woodTexture.jpg", NULL);
+
+	// create placeholder for texture
+	glGenTextures(1, &railTexture);
+
+	// make texture active
+	glBindTexture(GL_TEXTURE_2D, railTexture);
+
+	// texture parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// use linear filter both for magnification and minification
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	// load image data stored at pointer "groundPointer" into currently active texture
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, imageGround->pix);
 }
 
 void initSkyTexture() {
@@ -379,22 +401,123 @@ void myInit() {
 
 	initGroundTexture();
 	initSkyTexture();
+	initRailTexture();
 	initSpline();
 	calculateNormalsAndBinormals();
-
 
 	/* create the display list */
 	theSpline = glGenLists(1);
 	glNewList(theSpline, GL_COMPILE);
 
-	/* compute the list*/
-	glBegin(GL_LINE_STRIP);
-	glColor3f(1.0, 1.0, 1.0);
-	
-	for (int i = 0; i < rollercoasterSpline.numControlPoints; i++) {
-		glVertex3f(rollercoasterSpline.points[i].x, rollercoasterSpline.points[i].y, rollercoasterSpline.points[i].z);
-	}
+	// no modulation of texture color with lighting
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
+	glBindTexture(GL_TEXTURE_2D, railTexture);
+	// turn on texture mapping
+	glEnable(GL_TEXTURE_2D);
+
+	/* compute the list*/
+	glBegin(GL_QUADS);
+	glColor3f(1.0, 1.0, 1.0);
+
+	double alpha = 0.05;
+	for (int i = 0; i < rollercoasterSpline.numControlPoints; i++) {
+		double pointX = rollercoasterSpline.points[i].x;
+		double pointY = rollercoasterSpline.points[i].y;
+		double pointZ = rollercoasterSpline.points[i].z;
+		double normX = normals.points[i].x;
+		double normY = normals.points[i].y;
+		double normZ = normals.points[i].z;
+		double binX = binormals.points[i].x;
+		double binY = binormals.points[i].y;
+		double binZ = binormals.points[i].z;
+
+		double pointX2 = rollercoasterSpline.points[i + 1].x;
+		double pointY2 = rollercoasterSpline.points[i + 1].y;
+		double pointZ2 = rollercoasterSpline.points[i + 1].z;
+		double normX2 = normals.points[i + 1].x;
+		double normY2 = normals.points[i + 1].y;
+		double normZ2 = normals.points[i + 1].z;
+		double binX2 = binormals.points[i + 1].x;
+		double binY2 = binormals.points[i + 1].y;
+		double binZ2 = binormals.points[i + 1].z;
+
+		double v0X = pointX + alpha*(normX - binX);
+		double v0Y = pointY + alpha*(normY - binY);
+		double v0Z = pointZ + alpha*(normZ - binZ);
+
+		double v1X = pointX + alpha*(normX + binX);
+		double v1Y = pointY + alpha*(normY + binY);
+		double v1Z = pointZ + alpha*(normZ + binZ);
+
+		double v2X = pointX - alpha*(normX + binX);
+		double v2Y = pointY - alpha*(normY + binY);
+		double v2Z = pointZ - alpha*(normZ + binZ);
+
+		double v3X = pointX - alpha*(normX - binX);
+		double v3Y = pointY - alpha*(normY - binY);
+		double v3Z = pointZ - alpha*(normZ - binZ);
+
+		double v4X = pointX2 + alpha*(normX2 - binX2);
+		double v4Y = pointY2 + alpha*(normY2 - binY2);
+		double v4Z = pointZ2 + alpha*(normZ2 - binZ2);
+
+		double v5X = pointX2 + alpha*(normX2 + binX2);
+		double v5Y = pointY2 + alpha*(normY2 + binY2);
+		double v5Z = pointZ2 + alpha*(normZ2 + binZ2);
+
+		double v6X = pointX2 - alpha*(normX2 + binX2);
+		double v6Y = pointY2 - alpha*(normY2 + binY2);
+		double v6Z = pointZ2 - alpha*(normZ2 + binZ2);
+
+		double v7X = pointX2 - alpha*(normX2 - binX2);
+		double v7Y = pointY2 - alpha*(normY2 - binY2);
+		double v7Z = pointZ2 - alpha*(normZ2 - binZ2);
+		
+		
+		// right side face
+		glTexCoord2f(1.0, 0.0);
+		glVertex3f(v0X, v0Y, v0Z);
+		glTexCoord2f(0.0, 0.0);
+		glVertex3f(v1X, v1Y, v1Z);
+		glTexCoord2f(0.0, 1.0);
+		glVertex3f(v5X, v5Y, v5Z);
+		glTexCoord2f(1.0, 1.0);
+		glVertex3f(v4X, v4Y, v4Z);
+
+		// top face
+		glTexCoord2f(1.0, 0.0);
+		glVertex3f(v1X, v1Y, v1Z);
+		glTexCoord2f(0.0, 0.0);
+		glVertex3f(v2X, v2Y, v2Z);
+		glTexCoord2f(0.0, 1.0);
+		glVertex3f(v6X, v6Y, v6Z);
+		glTexCoord2f(1.0, 1.0);
+		glVertex3f(v5X, v5Y, v5Z);
+		
+		// left side face
+		glTexCoord2f(1.0, 0.0);
+		glVertex3f(v2X, v2Y, v2Z);
+		glTexCoord2f(0.0, 0.0);
+		glVertex3f(v3X, v3Y, v3Z);
+		glTexCoord2f(0.0, 1.0);
+		glVertex3f(v7X, v7Y, v7Z);
+		glTexCoord2f(1.0, 1.0);
+		glVertex3f(v6X, v6Y, v6Z);
+		
+
+		// bottom face
+		glTexCoord2f(1.0, 0.0);
+		glVertex3f(v0X, v0Y, v0Z);
+		glTexCoord2f(0.0, 0.0);
+		glVertex3f(v3X, v3Y, v3Z);
+		glTexCoord2f(0.0, 1.0);
+		glVertex3f(v7X, v7Y, v7Z);
+		glTexCoord2f(1.0, 1.0);
+		glVertex3f(v4X, v4Y, v4Z);
+
+	}
+	glDisable(GL_TEXTURE_2D);
 	glEnd();
 	glEndList();
 
@@ -509,7 +632,7 @@ void renderSpline() {
 
 // setting camera values for animation
 void animateRide() {
-	
+
 	// make sure the point count does not go out of range
 	if (pointCount == rollercoasterSpline.numControlPoints - 100) {
 		pointCount = 0;
@@ -520,7 +643,7 @@ void animateRide() {
 	// where the rollercoaster cart would be on the track
 	eyeX = rollercoasterSpline.points[pointCount].x;
 	eyeY = rollercoasterSpline.points[pointCount].y;
-	eyeZ = rollercoasterSpline.points[pointCount].z;
+	eyeZ = rollercoasterSpline.points[pointCount].z + .5;
 
 	double xTan = tangents.points[pointCount].x;
 	double yTan = tangents.points[pointCount].y;
@@ -531,7 +654,7 @@ void animateRide() {
 	centerX = xTan + eyeX;
 	centerY = yTan + eyeY;
 	centerZ = zTan + eyeZ;
-	
+
 	/*
 	double xNorm = normals.points[pointCount].x;
 	double yNorm = normals.points[pointCount].y;
