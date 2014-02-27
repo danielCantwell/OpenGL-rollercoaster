@@ -51,8 +51,9 @@ Pic *imageSky;
 
 spline rollercoasterSpline;
 int pointCount = 0;
-spline rollercoasterSplineTangents;
-spline rollercoasterSplineNormals;
+spline tangents;
+spline normals;
+spline binormals;
 
 
 int loadSplines(char *argv) {
@@ -145,6 +146,117 @@ void initSkyTexture() {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, imageSky->pix);
 }
 
+void calculateNormalsAndBinormals() {
+
+	// -----------------------------------------------------------------------
+	// -------------- calculate initial normal -------------------------------
+
+	double xTan = tangents.points[0].x;
+	double yTan = tangents.points[0].y;
+	double zTan = tangents.points[0].z;
+
+	double arbitraryX = 0, arbitraryY = 1, arbitraryZ = 0;
+	double xNorm = (yTan * arbitraryZ) - (zTan * arbitraryY);
+	double yNorm = (zTan * arbitraryX) - (xTan * arbitraryZ);
+	double zNorm = (xTan * arbitraryY) - (yTan * arbitraryX);
+
+	// calculate the magnitude of the normal vector for normalization
+	double normalMagnitude = sqrt((xNorm*xNorm) + (yNorm*yNorm) + (zNorm*zNorm));
+	// normalize the normal vector
+	xNorm = xNorm / normalMagnitude;
+	yNorm = yNorm / normalMagnitude;
+	zNorm = zNorm / normalMagnitude;
+
+	// store spline normals globally
+
+	normals.points[0].x = xNorm;
+	normals.points[0].y = yNorm;
+	normals.points[0].z = zNorm;
+
+	// ----------------------------------------------------------------------
+	// ----------------- calculate initial binormal -------------------------
+
+	double xBin = (yTan * zNorm) - (zTan * yNorm);
+	double yBin = (zTan * xNorm) - (xTan * zNorm);
+	double zBin = (xTan * yNorm) - (yTan * xNorm);
+
+	// calculate the magnitude of the binormal vector for normalization
+	double binormalMagnitude = sqrt((xBin*xBin) + (yBin*yBin) + (zBin*zBin));
+	// normalize the binormal vector
+	xBin = xBin / binormalMagnitude;
+	yBin = yBin / binormalMagnitude;
+	zBin = zBin / binormalMagnitude;
+
+	// store the spline binormals globally
+	binormals.points[0].x = xBin;
+	binormals.points[0].y = yBin;
+	binormals.points[0].y = zBin;
+
+
+	// ----------------------------------------------------------------------
+	// calculate normals  ----------  B[count - 1]  x  T[count] -------------
+
+	for (int i = 1; i < rollercoasterSpline.numControlPoints; i++) {
+
+		xBin = binormals.points[i - 1].x;
+		yBin = binormals.points[i - 1].y;
+		zBin = binormals.points[i - 1].z;
+
+		xTan = tangents.points[i].x;
+		yTan = tangents.points[i].y;
+		zTan = tangents.points[i].z;
+
+		xNorm = (yBin * zTan) - (zBin * yTan);
+		yNorm = (zBin * xTan) - (xBin * zTan);
+		zNorm = (xBin * yTan) - (yBin * xTan);
+
+		// calculate the magnitude of the normal vector for normalization
+		normalMagnitude = sqrt((xNorm*xNorm) + (yNorm*yNorm) + (zNorm*zNorm));
+		// normalize the normal vector
+		xNorm = xNorm / normalMagnitude;
+		yNorm = yNorm / normalMagnitude;
+		zNorm = zNorm / normalMagnitude;
+
+		// store spline normals globally
+
+		normals.points[i].x = xNorm;
+		normals.points[i].y = yNorm;
+		normals.points[i].z = zNorm;
+
+	}
+
+	// ---------------------------------------------------------------------
+	// calculate binormals ----------  tangent vector  x  normal vector ----
+
+	for (int i = 1; i < rollercoasterSpline.numControlPoints; i++) {
+
+		xNorm = normals.points[i].x;
+		yNorm = normals.points[i].y;
+		zNorm = normals.points[i].z;
+
+		xTan = tangents.points[i].x;
+		yTan = tangents.points[i].y;
+		zTan = tangents.points[i].z;
+
+		xBin = (yTan * zNorm) - (zTan * yNorm);
+		yBin = (zTan * xNorm) - (xTan * zNorm);
+		zBin = (xTan * yNorm) - (yTan * xNorm);
+
+		// calculate the magnitude of the binormal vector for normalization
+		binormalMagnitude = sqrt((xBin*xBin) + (yBin*yBin) + (zBin*zBin));
+		// normalize the binormal vector
+		xBin = xBin / binormalMagnitude;
+		yBin = yBin / binormalMagnitude;
+		zBin = zBin / binormalMagnitude;
+
+		// store the spline binormals globally
+		binormals.points[i].x = xBin;
+		binormals.points[i].y = yBin;
+		binormals.points[i].z = zBin;
+
+	}
+}
+
 /* openGL init */
 void myInit() {
 	// Create spline and store it in display list
@@ -152,11 +264,14 @@ void myInit() {
 	rollercoasterSpline.numControlPoints = g_Splines[0].numControlPoints * 20;
 	rollercoasterSpline.points = new point[rollercoasterSpline.numControlPoints];
 
-	rollercoasterSplineTangents.numControlPoints = rollercoasterSpline.numControlPoints;
-	rollercoasterSplineTangents.points = new point[rollercoasterSplineTangents.numControlPoints];
+	tangents.numControlPoints = rollercoasterSpline.numControlPoints;
+	tangents.points = new point[tangents.numControlPoints];
 
-	rollercoasterSplineNormals.numControlPoints = rollercoasterSpline.numControlPoints;
-	rollercoasterSplineNormals.points = new point[rollercoasterSplineNormals.numControlPoints];
+	normals.numControlPoints = rollercoasterSpline.numControlPoints;
+	normals.points = new point[normals.numControlPoints];
+
+	binormals.numControlPoints = rollercoasterSpline.numControlPoints;
+	binormals.points = new point[binormals.numControlPoints];
 
 
 	double s = 0.5;
@@ -228,7 +343,8 @@ void myInit() {
 			double u2Prime = 2 * i;
 			double u3Prime = 3 * i * i;
 
-			// calculate vertices -----
+			// ----------------------------------------------------------------------
+			// calculate vertices ---------------------------------------------------
 
 			x = (u3 * resultMatrix[0][0]) + (u2 * resultMatrix[1][0]) + (u1 * resultMatrix[2][0]) + resultMatrix[3][0];
 			y = (u3 * resultMatrix[0][1]) + (u2 * resultMatrix[1][1]) + (u1 * resultMatrix[2][1]) + resultMatrix[3][1];
@@ -243,39 +359,27 @@ void myInit() {
 			rollercoasterSpline.points[pointCount].y = y;
 			rollercoasterSpline.points[pointCount].z = z;
 
-			// calculate tangents -----
+			// -----------------------------------------------------------------------
+			// calculate tangents ----------------------------------------------------
 
 			xTan = (u3Prime * resultMatrix[0][0]) + (u2Prime * resultMatrix[1][0]) + (u1Prime * resultMatrix[2][0]);
 			yTan = (u3Prime * resultMatrix[0][1]) + (u2Prime * resultMatrix[1][1]) + (u1Prime * resultMatrix[2][1]);
 			zTan = (u3Prime * resultMatrix[0][2]) + (u2Prime * resultMatrix[1][2]) + (u1Prime * resultMatrix[2][2]);
 
 			// calculate the magnitude of the tangent vector for normalization
-			double magnitude = sqrt((xTan - x)*(xTan - x) + (yTan - y)*(yTan - y) + (zTan - z)*(zTan - z));
+			double tangentMagnitude = sqrt((xTan*xTan) + (yTan*yTan) + (zTan*zTan));
 
-			xTan = xTan / magnitude;
-			yTan = yTan / magnitude;
-			zTan = zTan / magnitude;
+			xTan = xTan / tangentMagnitude;
+			yTan = yTan / tangentMagnitude;
+			zTan = zTan / tangentMagnitude;
 
 			// store spline tangents globally
 
-			rollercoasterSplineTangents.points[pointCount].x = xTan;
-			rollercoasterSplineTangents.points[pointCount].y = yTan;
-			rollercoasterSplineTangents.points[pointCount].z = zTan;
-
-			// calculate normals -----
-			xNorm = (y * (zTan + z)) - (z * (yTan + y));
-			yNorm = (z * (xTan + x)) - (x * (zTan + z));
-			zNorm = (x * (yTan + y)) - (y * (xTan + x));
-
-			// store spline normals globally
-
-			rollercoasterSplineNormals.points[pointCount].x = xNorm;
-			rollercoasterSplineNormals.points[pointCount].y = yNorm;
-			rollercoasterSplineNormals.points[pointCount].z = zNorm;
-
+			tangents.points[pointCount].x = xTan;
+			tangents.points[pointCount].y = yTan;
+			tangents.points[pointCount].z = zTan;
 		}
 	}
-	pointCount = 0;
 
 	glEnd();
 
@@ -283,6 +387,9 @@ void myInit() {
 
 	initGroundTexture();
 	initSkyTexture();
+
+	pointCount = 0;
+	calculateNormalsAndBinormals();
 
 	/* setup gl view here */
 	glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -407,21 +514,25 @@ void animateRide() {
 	eyeY = rollercoasterSpline.points[pointCount].y;
 	eyeZ = rollercoasterSpline.points[pointCount].z;
 
-	double x = rollercoasterSplineTangents.points[pointCount].x;
-	double y = rollercoasterSplineTangents.points[pointCount].y;
-	double z = rollercoasterSplineTangents.points[pointCount].z;
+	double xTan = tangents.points[pointCount].x;
+	double yTan = tangents.points[pointCount].y;
+	double zTan = tangents.points[pointCount].z;
 
 	// set the center coordinates of the camera to where
 	// it should be looking from the cart, based on the unit tangent vector
-	centerX = x + eyeX;
-	centerY = y + eyeY;
-	centerZ = z + eyeZ;
+	centerX = xTan + eyeX;
+	centerY = yTan + eyeY;
+	centerZ = zTan + eyeZ;
 	
-	//
-	//double normalX = (eyeY * centerZ) - (eyeZ * centerY);
-	//double normalY = (eyeZ * centerX) - (eyeX * centerZ);
-	//double normalZ = (eyeX * centerY) - (eyeY * centerX);
-	//
+	/*
+	double xNorm = normals.points[pointCount].x;
+	double yNorm = normals.points[pointCount].y;
+	double zNorm = normals.points[pointCount].z;
+
+	upX = xNorm;
+	upY = yNorm;
+	upZ = zNorm;
+	*/
 }
 
 /***** DISPLAY FUNCTION *****/
