@@ -257,8 +257,7 @@ void calculateNormalsAndBinormals() {
 	}
 }
 
-/* openGL init */
-void myInit() {
+void initSpline() {
 	// Create spline and store it in display list
 
 	rollercoasterSpline.numControlPoints = g_Splines[0].numControlPoints * 20;
@@ -284,14 +283,6 @@ void myInit() {
 	};
 
 	double resultMatrix[4][3] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };	// = basis matrix * control matrix
-
-	/* create the display list */
-	theSpline = glGenLists(1);
-	glNewList(theSpline, GL_COMPILE);
-
-	/* compute the list*/
-	glBegin(GL_LINE_STRIP);
-	glColor3f(1.0, 1.0, 1.0);
 
 	int numPoints = g_Splines->numControlPoints;
 
@@ -380,16 +371,33 @@ void myInit() {
 			tangents.points[pointCount].z = zTan;
 		}
 	}
+	pointCount = 0;
+}
 
-	glEnd();
-
-	glEndList();
+/* openGL init */
+void myInit() {
 
 	initGroundTexture();
 	initSkyTexture();
-
-	pointCount = 0;
+	initSpline();
 	calculateNormalsAndBinormals();
+
+
+	/* create the display list */
+	theSpline = glGenLists(1);
+	glNewList(theSpline, GL_COMPILE);
+
+	/* compute the list*/
+	glBegin(GL_LINE_STRIP);
+	glColor3f(1.0, 1.0, 1.0);
+	
+	for (int i = 0; i < rollercoasterSpline.numControlPoints; i++) {
+		glVertex3f(rollercoasterSpline.points[i].x, rollercoasterSpline.points[i].y, rollercoasterSpline.points[i].z);
+	}
+
+	glEnd();
+	glEndList();
+
 
 	/* setup gl view here */
 	glClearColor(0.0, 0.0, 0.0, 0.0);
