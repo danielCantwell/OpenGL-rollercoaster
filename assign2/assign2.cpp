@@ -52,7 +52,7 @@ Pic *imageSky;
 spline rollercoasterSpline;
 int pointCount = 0;
 spline rollercoasterSplineTangents;
-int tangentCount = 0;
+spline rollercoasterSplineNormals;
 
 
 int loadSplines(char *argv) {
@@ -148,11 +148,16 @@ void initSkyTexture() {
 /* openGL init */
 void myInit() {
 	// Create spline and store it in display list
+
 	rollercoasterSpline.numControlPoints = g_Splines[0].numControlPoints * 20;
 	rollercoasterSpline.points = new point[rollercoasterSpline.numControlPoints];
 
 	rollercoasterSplineTangents.numControlPoints = rollercoasterSpline.numControlPoints;
 	rollercoasterSplineTangents.points = new point[rollercoasterSplineTangents.numControlPoints];
+
+	rollercoasterSplineNormals.numControlPoints = rollercoasterSpline.numControlPoints;
+	rollercoasterSplineNormals.points = new point[rollercoasterSplineNormals.numControlPoints];
+
 
 	double s = 0.5;
 
@@ -211,46 +216,66 @@ void myInit() {
 		}
 		// multiply by u array to get x y z coords
 		double x = 0, y = 0, z = 0;
+		// multiply by u' array to get x y z tangents
+		double xTan = 0, yTan = 0, zTan = 0;
+		double xNorm = 0, yNorm = 0, zNorm = 0;
 		for (double i = 0.05; i <= 1; i += 0.05) {
 			double u1 = i;
 			double u2 = i * i;
 			double u3 = i * i * i;
 
+			double u1Prime = 1;
+			double u2Prime = 2 * i;
+			double u3Prime = 3 * i * i;
+
+			// calculate vertices -----
+
 			x = (u3 * resultMatrix[0][0]) + (u2 * resultMatrix[1][0]) + (u1 * resultMatrix[2][0]) + resultMatrix[3][0];
 			y = (u3 * resultMatrix[0][1]) + (u2 * resultMatrix[1][1]) + (u1 * resultMatrix[2][1]) + resultMatrix[3][1];
 			z = (u3 * resultMatrix[0][2]) + (u2 * resultMatrix[1][2]) + (u1 * resultMatrix[2][2]) + resultMatrix[3][2];
 
+			// store the vertices in display list
 			glVertex3f(x, y, z);
 
 			// store spline globally in a spline struct
-
 			pointCount++;
 			rollercoasterSpline.points[pointCount].x = x;
 			rollercoasterSpline.points[pointCount].y = y;
 			rollercoasterSpline.points[pointCount].z = z;
-		}
-		// multiply by u' array to get x y z tangents
-		double xTan = 0, yTan = 0, zTan = 0;
-		for (double i = 0.05; i <= 1; i += 0.05) {
-			double u0 = 0;
-			double u1 = 1;
-			double u2 = 2 * i;
-			double u3 = 3 * i * i;
 
-			xTan = (u3 * resultMatrix[0][0]) + (u2 * resultMatrix[1][0]) + (u1 * resultMatrix[2][0]) + (u0 * resultMatrix[3][0]);
-			yTan = (u3 * resultMatrix[0][1]) + (u2 * resultMatrix[1][1]) + (u1 * resultMatrix[2][1]) + (u0 * resultMatrix[3][1]);
-			zTan = (u3 * resultMatrix[0][2]) + (u2 * resultMatrix[1][2]) + (u1 * resultMatrix[2][2]) + (u0 * resultMatrix[3][2]);
+			// calculate tangents -----
+
+			xTan = (u3Prime * resultMatrix[0][0]) + (u2Prime * resultMatrix[1][0]) + (u1Prime * resultMatrix[2][0]);
+			yTan = (u3Prime * resultMatrix[0][1]) + (u2Prime * resultMatrix[1][1]) + (u1Prime * resultMatrix[2][1]);
+			zTan = (u3Prime * resultMatrix[0][2]) + (u2Prime * resultMatrix[1][2]) + (u1Prime * resultMatrix[2][2]);
+
+			// calculate the magnitude of the tangent vector for normalization
+			double magnitude = sqrt((xTan - x)*(xTan - x) + (yTan - y)*(yTan - y) + (zTan - z)*(zTan - z));
+
+			xTan = xTan / magnitude;
+			yTan = yTan / magnitude;
+			zTan = zTan / magnitude;
 
 			// store spline tangents globally
 
-			tangentCount++;
-			rollercoasterSplineTangents.points[tangentCount].x = xTan;
-			rollercoasterSplineTangents.points[tangentCount].y = yTan;
-			rollercoasterSplineTangents.points[tangentCount].z = zTan;
+			rollercoasterSplineTangents.points[pointCount].x = xTan;
+			rollercoasterSplineTangents.points[pointCount].y = yTan;
+			rollercoasterSplineTangents.points[pointCount].z = zTan;
+
+			// calculate normals -----
+			xNorm = (y * (zTan + z)) - (z * (yTan + y));
+			yNorm = (z * (xTan + x)) - (x * (zTan + z));
+			zNorm = (x * (yTan + y)) - (y * (xTan + x));
+
+			// store spline normals globally
+
+			rollercoasterSplineNormals.points[pointCount].x = xNorm;
+			rollercoasterSplineNormals.points[pointCount].y = yNorm;
+			rollercoasterSplineNormals.points[pointCount].z = zNorm;
+
 		}
 	}
 	pointCount = 0;
-	tangentCount = 0;
 
 	glEnd();
 
@@ -370,10 +395,14 @@ void renderSpline() {
 // setting camera values for animation
 void animateRide() {
 	
-	if (pointCount == rollercoasterSpline.numControlPoints) {
+	// make sure the point count does not go out of range
+	if (pointCount == rollercoasterSpline.numControlPoints - 100) {
 		pointCount = 0;
 	}
 	pointCount++;
+
+	// set the eye coordinates of the camera to the position
+	// where the rollercoaster cart would be on the track
 	eyeX = rollercoasterSpline.points[pointCount].x;
 	eyeY = rollercoasterSpline.points[pointCount].y;
 	eyeZ = rollercoasterSpline.points[pointCount].z;
@@ -382,22 +411,20 @@ void animateRide() {
 	double y = rollercoasterSplineTangents.points[pointCount].y;
 	double z = rollercoasterSplineTangents.points[pointCount].z;
 
-	double magnitude = sqrt((x - eyeX)*(x - eyeX) + (y - eyeY)*(y - eyeY) + (z - eyeZ)*(z - eyeZ));
-
-	centerX = (x / magnitude) + eyeX;
-	centerY = y / magnitude + eyeY;
-	centerZ = z / magnitude + eyeZ;
-
-	std::cout << "X :  " << centerX << "   Y :  " << centerY << "   Z :  " << centerZ << std::endl;
+	// set the center coordinates of the camera to where
+	// it should be looking from the cart, based on the unit tangent vector
+	centerX = x + eyeX;
+	centerY = y + eyeY;
+	centerZ = z + eyeZ;
 	
-	/*
-	upX = (eyeY * centerZ) - (eyeZ * centerY);
-	upY = (eyeZ * centerX) - (eyeX * centerZ);
-	upZ = (eyeX * centerY) - (eyeY * centerX);
-	*/
+	//
+	//double normalX = (eyeY * centerZ) - (eyeZ * centerY);
+	//double normalY = (eyeZ * centerX) - (eyeX * centerZ);
+	//double normalZ = (eyeX * centerY) - (eyeY * centerX);
+	//
 }
 
-/***** MAIN DISPLAY FUNCTION *****/
+/***** DISPLAY FUNCTION *****/
 void display()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -442,7 +469,7 @@ void reshape(int w, int h)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	/* Perspective camera view */
-	gluPerspective(60.0, aspect, .1, 1000);
+	gluPerspective(60.0, aspect, .01, 100);
 	glMatrixMode(GL_MODELVIEW);
 }
 
