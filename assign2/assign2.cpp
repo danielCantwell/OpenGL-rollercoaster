@@ -476,37 +476,75 @@ void myInit() {
 		double binY2 = binormals.points[i + 1].y;
 		double binZ2 = binormals.points[i + 1].z;
 
-		double v0X = pointX + alpha*(normX - binX);
-		double v0Y = pointY + alpha*(normY - binY);
-		double v0Z = pointZ + alpha*(normZ - binZ);
+		double v0X = pointX - alpha*(normX + binX);
+		double v0Y = pointY - alpha*(normY + binY);
+		double v0Z = pointZ - alpha*(normZ + binZ);
 
 		double v1X = pointX + alpha*(normX + binX);
 		double v1Y = pointY + alpha*(normY + binY);
 		double v1Z = pointZ + alpha*(normZ + binZ);
 
-		double v2X = pointX - alpha*(normX + binX);
-		double v2Y = pointY - alpha*(normY + binY);
-		double v2Z = pointZ - alpha*(normZ + binZ);
+		double v2X = pointX + alpha*(normX - binX);
+		double v2Y = pointY + alpha*(normY - binY);
+		double v2Z = pointZ + alpha*(normZ - binZ);
 
 		double v3X = pointX - alpha*(normX - binX);
 		double v3Y = pointY - alpha*(normY - binY);
 		double v3Z = pointZ - alpha*(normZ - binZ);
 
-		double v4X = pointX2 + alpha*(normX2 - binX2);
-		double v4Y = pointY2 + alpha*(normY2 - binY2);
-		double v4Z = pointZ2 + alpha*(normZ2 - binZ2);
+		double v4X = pointX2 - alpha*(normX2 + binX2);
+		double v4Y = pointY2 - alpha*(normY2 + binY2);
+		double v4Z = pointZ2 - alpha*(normZ2 + binZ2);
 
 		double v5X = pointX2 + alpha*(normX2 + binX2);
 		double v5Y = pointY2 + alpha*(normY2 + binY2);
 		double v5Z = pointZ2 + alpha*(normZ2 + binZ2);
 
-		double v6X = pointX2 - alpha*(normX2 + binX2);
-		double v6Y = pointY2 - alpha*(normY2 + binY2);
-		double v6Z = pointZ2 - alpha*(normZ2 + binZ2);
+		double v6X = pointX2 + alpha*(normX2 - binX2);
+		double v6Y = pointY2 + alpha*(normY2 - binY2);
+		double v6Z = pointZ2 + alpha*(normZ2 - binZ2);
 
 		double v7X = pointX2 - alpha*(normX2 - binX2);
 		double v7Y = pointY2 - alpha*(normY2 - binY2);
 		double v7Z = pointZ2 - alpha*(normZ2 - binZ2);
+
+		// // // RAIL TWO // // //
+		
+		double separation = 0.8;
+
+		double v0X2 = pointX - alpha*(normX + binX) + separation;
+		double v0Y2 = pointY - alpha*(normY + binY);
+		double v0Z2 = pointZ - alpha*(normZ + binZ);
+
+		double v1X2 = pointX + alpha*(normX + binX) + separation;
+		double v1Y2 = pointY + alpha*(normY + binY);
+		double v1Z2 = pointZ + alpha*(normZ + binZ);
+
+		double v2X2 = pointX + alpha*(normX - binX) + separation;
+		double v2Y2 = pointY + alpha*(normY - binY);
+		double v2Z2 = pointZ + alpha*(normZ - binZ);
+
+		double v3X2 = pointX - alpha*(normX - binX) + separation;
+		double v3Y2 = pointY - alpha*(normY - binY);
+		double v3Z2 = pointZ - alpha*(normZ - binZ);
+
+		double v4X2 = pointX2 - alpha*(normX2 + binX2) + separation;
+		double v4Y2 = pointY2 - alpha*(normY2 + binY2);
+		double v4Z2 = pointZ2 - alpha*(normZ2 + binZ2);
+
+		double v5X2 = pointX2 + alpha*(normX2 + binX2) + separation;
+		double v5Y2 = pointY2 + alpha*(normY2 + binY2);
+		double v5Z2 = pointZ2 + alpha*(normZ2 + binZ2);
+
+		double v6X2 = pointX2 + alpha*(normX2 - binX2) + separation;
+		double v6Y2 = pointY2 + alpha*(normY2 - binY2);
+		double v6Z2 = pointZ2 + alpha*(normZ2 - binZ2);
+
+		double v7X2 = pointX2 - alpha*(normX2 - binX2) + separation;
+		double v7Y2 = pointY2 - alpha*(normY2 - binY2);
+		double v7Z2 = pointZ2 - alpha*(normZ2 - binZ2);
+		
+		// // // // // // // // //
 		
 		
 		glNormal3f(normals.points[i].x, normals.points[i].y, normals.points[i].z);
@@ -540,7 +578,6 @@ void myInit() {
 		glVertex3f(v7X, v7Y, v7Z);
 		glTexCoord2f(1.0, 1.0);
 		glVertex3f(v6X, v6Y, v6Z);
-		
 
 		// bottom face
 		glTexCoord2f(1.0, 0.0);
@@ -552,6 +589,52 @@ void myInit() {
 		glTexCoord2f(1.0, 1.0);
 		glVertex3f(v4X, v4Y, v4Z);
 
+
+
+		// // // RAIL TWO // // //
+		// // // // // // // // //
+		
+		// right side face
+		glTexCoord2f(1.0, 0.0);
+		glVertex3f(v0X2, v0Y2, v0Z2);
+		glTexCoord2f(0.0, 0.0);
+		glVertex3f(v1X2, v1Y2, v1Z2);
+		glTexCoord2f(0.0, 1.0);
+		glVertex3f(v5X2, v5Y2, v5Z2);
+		glTexCoord2f(1.0, 1.0);
+		glVertex3f(v4X2, v4Y2, v4Z2);
+
+		// top face
+		glTexCoord2f(1.0, 0.0);
+		glVertex3f(v1X2, v1Y2, v1Z2);
+		glTexCoord2f(0.0, 0.0);
+		glVertex3f(v2X2, v2Y2, v2Z2);
+		glTexCoord2f(0.0, 1.0);
+		glVertex3f(v6X2, v6Y2, v6Z2);
+		glTexCoord2f(1.0, 1.0);
+		glVertex3f(v5X2, v5Y2, v5Z2);
+
+		// left side face
+		glTexCoord2f(1.0, 0.0);
+		glVertex3f(v2X2, v2Y2, v2Z2);
+		glTexCoord2f(0.0, 0.0);
+		glVertex3f(v3X2, v3Y2, v3Z2);
+		glTexCoord2f(0.0, 1.0);
+		glVertex3f(v7X2, v7Y2, v7Z2);
+		glTexCoord2f(1.0, 1.0);
+		glVertex3f(v6X2, v6Y2, v6Z2);
+
+
+		// bottom face
+		glTexCoord2f(1.0, 0.0);
+		glVertex3f(v0X2, v0Y2, v0Z2);
+		glTexCoord2f(0.0, 0.0);
+		glVertex3f(v3X2, v3Y2, v3Z2);
+		glTexCoord2f(0.0, 1.0);
+		glVertex3f(v7X2, v7Y2, v7Z2);
+		glTexCoord2f(1.0, 1.0);
+		glVertex3f(v4X2, v4Y2, v4Z2);
+		
 	}
 	glDisable(GL_TEXTURE_2D);
 	glEnd();
@@ -696,7 +779,7 @@ void animateRide() {
 
 	// set the eye coordinates of the camera to the position
 	// where the rollercoaster cart would be on the track
-	eyeX = rollercoasterSpline.points[pointCount].x;
+	eyeX = rollercoasterSpline.points[pointCount].x + .4;
 	eyeY = rollercoasterSpline.points[pointCount].y;
 	eyeZ = rollercoasterSpline.points[pointCount].z + .5;
 
