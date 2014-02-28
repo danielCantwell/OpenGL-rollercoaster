@@ -43,12 +43,15 @@ double upX = 0.0, upY = 0.0, upZ = 1.0;
 
 /* display list */
 GLuint theSpline;
+
 /* textures */
 GLuint groundTexture;
 GLuint skyTexture;
+GLuint skyTopTexture;
 GLuint railTexture;
 Pic *imageGround;
 Pic *imageSky;
+Pic *imageSkyTop;
 Pic *imageRail;
 
 spline rollercoasterSpline;
@@ -56,6 +59,10 @@ int pointCount = 0;
 spline tangents;
 spline normals;
 spline binormals;
+
+/* lighting */
+GLfloat light_diffuse[] = { 0.0, 1.0, 1.0, 1.0 };
+GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
 
 
 int loadSplines(char *argv) {
@@ -166,6 +173,27 @@ void initSkyTexture() {
 
 	// load image data stored at pointer "groundPointer" into currently active texture
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, imageSky->pix);
+
+
+	//// SKY BOX - TOP
+
+	imageSkyTop = jpeg_read("skytop.jpg", NULL);
+
+	// create placeholder for texture
+	glGenTextures(1, &skyTopTexture);
+
+	// make texture active
+	glBindTexture(GL_TEXTURE_2D, skyTopTexture);
+
+	// texture parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// use linear filter both for magnification and minification
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	// load image data stored at pointer "groundPointer" into currently active texture
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, imageSkyTop->pix);
 }
 
 void calculateNormalsAndBinormals() {
@@ -399,6 +427,12 @@ void initSpline() {
 /* openGL init */
 void myInit() {
 
+	/* Enable a single OpenGL light. */
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+	glEnable(GL_LIGHT0);
+	glEnable(GL_LIGHTING);
+
 	initGroundTexture();
 	initSkyTexture();
 	initRailTexture();
@@ -409,8 +443,8 @@ void myInit() {
 	theSpline = glGenLists(1);
 	glNewList(theSpline, GL_COMPILE);
 
-	// no modulation of texture color with lighting
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	// modulate texture with lighting
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
 	glBindTexture(GL_TEXTURE_2D, railTexture);
 	// turn on texture mapping
@@ -475,6 +509,8 @@ void myInit() {
 		double v7Z = pointZ2 - alpha*(normZ2 - binZ2);
 		
 		
+		glNormal3f(normals.points[i].x, normals.points[i].y, normals.points[i].z);
+
 		// right side face
 		glTexCoord2f(1.0, 0.0);
 		glVertex3f(v0X, v0Y, v0Z);
@@ -610,6 +646,25 @@ void renderSky() {
 	glEnd();
 
 	glDisable(GL_TEXTURE_2D);
+
+	glBindTexture(GL_TEXTURE_2D, skyTopTexture);
+	// turn on texture mapping
+	glEnable(GL_TEXTURE_2D);
+
+	glBegin(GL_QUADS);
+
+	// top of skybox
+	glTexCoord2f(1.0, 1.0);
+	glVertex3f(50.0, 50.0, 49.9);
+	glTexCoord2f(0.0, 1.0);
+	glVertex3f(50.0, -20.0, 49.9);
+	glTexCoord2f(0.0, 0.0);
+	glVertex3f(-20.0, -20.0, 49.9);
+	glTexCoord2f(1.0, 0.0);
+	glVertex3f(-20.0, 50.0, 49.9);
+
+	glEnd();
+	glDisable(GL_TEXTURE_2D);
 }
 
 /* draw spline with material propterties */
@@ -655,15 +710,20 @@ void animateRide() {
 	centerY = yTan + eyeY;
 	centerZ = zTan + eyeZ;
 
-	/*
+	
 	double xNorm = normals.points[pointCount].x;
 	double yNorm = normals.points[pointCount].y;
 	double zNorm = normals.points[pointCount].z;
 
-	upX = xNorm;
-	upY = yNorm;
-	upZ = zNorm;
-	*/
+	std::cout << "Count : " << pointCount << " - ";
+
+	std::cout << "Tangent ( " << xTan << ", " << yTan << ", " << zTan << " )  ";
+	std::cout << "Normal ( " << xNorm << ", " << yNorm << ", " << zNorm << " )  ";
+	std::cout << "Binormal ( " << binormals.points[pointCount].x << ", " << binormals.points[pointCount].y << ", " << binormals.points[pointCount].z << " )" << std::endl << std::endl;
+
+	//upX = xNorm;
+	//upY = yNorm;
+	//upZ = zNorm;
 }
 
 /***** DISPLAY FUNCTION *****/

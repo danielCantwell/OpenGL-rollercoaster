@@ -52,5 +52,8 @@
     <Image Include="woodTexture.jpg">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="skytop.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>
