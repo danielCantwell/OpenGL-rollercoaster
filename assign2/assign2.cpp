@@ -61,8 +61,16 @@ spline normals;
 spline binormals;
 
 /* lighting */
-GLfloat light_diffuse[] = { 0.0, 1.0, 1.0, 1.0 };
-GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
+GLfloat light_ambient[] = { 0.2, 0.2, 0.2, 1.0 };
+GLfloat light_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+GLfloat light_position[] = { 15.0, 15.0, 30.0, 0.0 };
+
+/* materials */
+GLfloat mat_a[] = { 0.3, 0.3, 0.3, 1.0 };
+GLfloat mat_d[] = { 0.3, 0.3, 0.3, 1.0 };
+GLfloat mat_s[] = { 1.0, 1.0, 1.0, 1.0 };
+GLfloat low_sh[] = { 2.0 };
 
 
 int loadSplines(char *argv) {
@@ -136,7 +144,7 @@ void initGroundTexture() {
 }
 
 void initRailTexture() {
-	imageGround = jpeg_read("woodTexture.jpg", NULL);
+	imageRail = jpeg_read("metalTexture.jpg", NULL);
 
 	// create placeholder for texture
 	glGenTextures(1, &railTexture);
@@ -151,8 +159,8 @@ void initRailTexture() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-	// load image data stored at pointer "groundPointer" into currently active texture
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, imageGround->pix);
+	// load image data stored at pointer "imageRail" into currently active texture
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1024, 1024, 0, GL_RGB, GL_UNSIGNED_BYTE, imageRail->pix);
 }
 
 void initSkyTexture() {
@@ -209,7 +217,11 @@ void calculateNormalsAndBinormals() {
 	double xNorm = (yTan * arbitraryZ) - (zTan * arbitraryY);
 	double yNorm = (zTan * arbitraryX) - (xTan * arbitraryZ);
 	double zNorm = (xTan * arbitraryY) - (yTan * arbitraryX);
-
+/*
+	double xNorm = (arbitraryY * zTan) - (arbitraryZ * yTan);
+	double yNorm = (arbitraryZ * xTan) - (arbitraryX * zTan);
+	double zNorm = (arbitraryX * yTan) - (arbitraryY * xTan);
+*/
 	// calculate the magnitude of the normal vector for normalization
 	double normalMagnitude = sqrt((xNorm*xNorm) + (yNorm*yNorm) + (zNorm*zNorm));
 	// normalize the normal vector
@@ -238,9 +250,9 @@ void calculateNormalsAndBinormals() {
 	zBin = zBin / binormalMagnitude;
 
 	// store the spline binormals globally
-	binormals.points[0].x = xBin;
-	binormals.points[0].y = yBin;
-	binormals.points[0].y = zBin;
+	binormals.points[0].x = -xBin;
+	binormals.points[0].y = -yBin;
+	binormals.points[0].y = -zBin;
 
 
 	// ----------------------------------------------------------------------
@@ -273,20 +285,7 @@ void calculateNormalsAndBinormals() {
 		normals.points[i].y = yNorm;
 		normals.points[i].z = zNorm;
 
-	}
-
-	// ---------------------------------------------------------------------
-	// calculate binormals ----------  tangent vector  x  normal vector ----
-
-	for (int i = 1; i < rollercoasterSpline.numControlPoints; i++) {
-
-		xNorm = normals.points[i].x;
-		yNorm = normals.points[i].y;
-		zNorm = normals.points[i].z;
-
-		xTan = tangents.points[i].x;
-		yTan = tangents.points[i].y;
-		zTan = tangents.points[i].z;
+		///// BINORMALS     tangent vector x normal vector
 
 		xBin = (yTan * zNorm) - (zTan * yNorm);
 		yBin = (zTan * xNorm) - (xTan * zNorm);
@@ -310,7 +309,7 @@ void calculateNormalsAndBinormals() {
 void initSpline() {
 	// Create spline and store it in display list
 
-	rollercoasterSpline.numControlPoints = g_Splines[0].numControlPoints * 20;
+	rollercoasterSpline.numControlPoints = g_Splines[0].numControlPoints * 20 - 40;
 	rollercoasterSpline.points = new point[rollercoasterSpline.numControlPoints];
 
 	tangents.numControlPoints = rollercoasterSpline.numControlPoints;
@@ -424,12 +423,29 @@ void initSpline() {
 	pointCount = 0;
 }
 
+void initLighting() {
+	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_ambient);
+	glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
+
+	glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+}
+
+void initMaterials() {
+	glMaterialfv(GL_FRONT, GL_AMBIENT, mat_a);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_d);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_s);
+	glMaterialfv(GL_FRONT, GL_SHININESS, low_sh);
+}
+
 /* openGL init */
 void myInit() {
 
 	/* Enable a single OpenGL light. */
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+	initLighting();
+	initMaterials();
 	glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHTING);
 
@@ -450,9 +466,20 @@ void myInit() {
 	// turn on texture mapping
 	glEnable(GL_TEXTURE_2D);
 
+	glBegin(GL_LINES);
+
+	for (int i = 0; i < normals.numControlPoints; i++) {
+		glVertex3f(rollercoasterSpline.points[i].x, rollercoasterSpline.points[i].y, rollercoasterSpline.points[i].z);
+		glVertex3f(rollercoasterSpline.points[i].x + binormals.points[i].x, rollercoasterSpline.points[i].y + binormals.points[i].y, rollercoasterSpline.points[i].z + binormals.points[i].z);
+		
+		glVertex3f(rollercoasterSpline.points[i].x, rollercoasterSpline.points[i].y, rollercoasterSpline.points[i].z);
+		glVertex3f(rollercoasterSpline.points[i].x + normals.points[i].x, rollercoasterSpline.points[i].y + normals.points[i].y, rollercoasterSpline.points[i].z + normals.points[i].z);
+	}
+
+	glEnd();
+
 	/* compute the list*/
 	glBegin(GL_QUADS);
-	glColor3f(1.0, 1.0, 1.0);
 
 	double alpha = 0.05;
 	for (int i = 0; i < rollercoasterSpline.numControlPoints; i++) {
@@ -476,9 +503,9 @@ void myInit() {
 		double binY2 = binormals.points[i + 1].y;
 		double binZ2 = binormals.points[i + 1].z;
 
-		double v0X = pointX - alpha*(normX + binX);
-		double v0Y = pointY - alpha*(normY + binY);
-		double v0Z = pointZ - alpha*(normZ + binZ);
+		double v0X = pointX - alpha*(normX - binX);
+		double v0Y = pointY - alpha*(normY - binY);
+		double v0Z = pointZ - alpha*(normZ - binZ);
 
 		double v1X = pointX + alpha*(normX + binX);
 		double v1Y = pointY + alpha*(normY + binY);
@@ -488,13 +515,13 @@ void myInit() {
 		double v2Y = pointY + alpha*(normY - binY);
 		double v2Z = pointZ + alpha*(normZ - binZ);
 
-		double v3X = pointX - alpha*(normX - binX);
-		double v3Y = pointY - alpha*(normY - binY);
-		double v3Z = pointZ - alpha*(normZ - binZ);
+		double v3X = pointX - alpha*(normX + binX);
+		double v3Y = pointY - alpha*(normY + binY);
+		double v3Z = pointZ - alpha*(normZ + binZ);
 
-		double v4X = pointX2 - alpha*(normX2 + binX2);
-		double v4Y = pointY2 - alpha*(normY2 + binY2);
-		double v4Z = pointZ2 - alpha*(normZ2 + binZ2);
+		double v4X = pointX2 - alpha*(normX2 - binX2);
+		double v4Y = pointY2 - alpha*(normY2 - binY2);
+		double v4Z = pointZ2 - alpha*(normZ2 - binZ2);
 
 		double v5X = pointX2 + alpha*(normX2 + binX2);
 		double v5Y = pointY2 + alpha*(normY2 + binY2);
@@ -504,51 +531,48 @@ void myInit() {
 		double v6Y = pointY2 + alpha*(normY2 - binY2);
 		double v6Z = pointZ2 + alpha*(normZ2 - binZ2);
 
-		double v7X = pointX2 - alpha*(normX2 - binX2);
-		double v7Y = pointY2 - alpha*(normY2 - binY2);
-		double v7Z = pointZ2 - alpha*(normZ2 - binZ2);
+		double v7X = pointX2 - alpha*(normX2 + binX2);
+		double v7Y = pointY2 - alpha*(normY2 + binY2);
+		double v7Z = pointZ2 - alpha*(normZ2 + binZ2);
 
 		// // // RAIL TWO // // //
 		
-		double separation = 0.8;
+		double v0X2 = pointX - alpha*normX + 2 * binX;
+		double v0Y2 = pointY - alpha*normY + 2 * binY;
+		double v0Z2 = pointZ - alpha*normZ + 2 * binZ;
 
-		double v0X2 = pointX - alpha*(normX + binX) + separation;
-		double v0Y2 = pointY - alpha*(normY + binY);
-		double v0Z2 = pointZ - alpha*(normZ + binZ);
+		double v1X2 = pointX + alpha*normX + 2 * binX;
+		double v1Y2 = pointY + alpha*normY + 2 * binY;
+		double v1Z2 = pointZ + alpha*normZ + 2 * binZ;
 
-		double v1X2 = pointX + alpha*(normX + binX) + separation;
-		double v1Y2 = pointY + alpha*(normY + binY);
-		double v1Z2 = pointZ + alpha*(normZ + binZ);
+		double v2X2 = pointX + alpha*normX + binX;
+		double v2Y2 = pointY + alpha*normY + binY;
+		double v2Z2 = pointZ + alpha*normZ + binZ;
 
-		double v2X2 = pointX + alpha*(normX - binX) + separation;
-		double v2Y2 = pointY + alpha*(normY - binY);
-		double v2Z2 = pointZ + alpha*(normZ - binZ);
+		double v3X2 = pointX - alpha*normX + binX;
+		double v3Y2 = pointY - alpha*normY + binY;
+		double v3Z2 = pointZ - alpha*normZ + binZ;
 
-		double v3X2 = pointX - alpha*(normX - binX) + separation;
-		double v3Y2 = pointY - alpha*(normY - binY);
-		double v3Z2 = pointZ - alpha*(normZ - binZ);
+		double v4X2 = pointX2 - alpha*normX2 + 2 * binX2;
+		double v4Y2 = pointY2 - alpha*normY2 + 2 * binY2;
+		double v4Z2 = pointZ2 - alpha*normZ2 + 2 * binZ2;
 
-		double v4X2 = pointX2 - alpha*(normX2 + binX2) + separation;
-		double v4Y2 = pointY2 - alpha*(normY2 + binY2);
-		double v4Z2 = pointZ2 - alpha*(normZ2 + binZ2);
+		double v5X2 = pointX2 + alpha*normX2 + 2 * binX2;
+		double v5Y2 = pointY2 + alpha*normY2 + 2 * binY2;
+		double v5Z2 = pointZ2 + alpha*normZ2 + 2 * binZ2;
 
-		double v5X2 = pointX2 + alpha*(normX2 + binX2) + separation;
-		double v5Y2 = pointY2 + alpha*(normY2 + binY2);
-		double v5Z2 = pointZ2 + alpha*(normZ2 + binZ2);
+		double v6X2 = pointX2 + alpha*normX2 + binX2;
+		double v6Y2 = pointY2 + alpha*normY2 + binY2;
+		double v6Z2 = pointZ2 + alpha*normZ2 + binZ2;
 
-		double v6X2 = pointX2 + alpha*(normX2 - binX2) + separation;
-		double v6Y2 = pointY2 + alpha*(normY2 - binY2);
-		double v6Z2 = pointZ2 + alpha*(normZ2 - binZ2);
-
-		double v7X2 = pointX2 - alpha*(normX2 - binX2) + separation;
-		double v7Y2 = pointY2 - alpha*(normY2 - binY2);
-		double v7Z2 = pointZ2 - alpha*(normZ2 - binZ2);
+		double v7X2 = pointX2 - alpha*normX2 + binX2;
+		double v7Y2 = pointY2 - alpha*normY2 + binY2;
+		double v7Z2 = pointZ2 - alpha*normZ2 + binZ2;
 		
 		// // // // // // // // //
-		
-		
-		glNormal3f(normals.points[i].x, normals.points[i].y, normals.points[i].z);
 
+
+		glNormal3f(-normals.points[i].x, -normals.points[i].y, -normals.points[i].z);
 		// right side face
 		glTexCoord2f(1.0, 0.0);
 		glVertex3f(v0X, v0Y, v0Z);
@@ -559,6 +583,7 @@ void myInit() {
 		glTexCoord2f(1.0, 1.0);
 		glVertex3f(v4X, v4Y, v4Z);
 
+		glNormal3f(-binormals.points[i].x, -binormals.points[i].y, -binormals.points[i].z);
 		// top face
 		glTexCoord2f(1.0, 0.0);
 		glVertex3f(v1X, v1Y, v1Z);
@@ -568,7 +593,8 @@ void myInit() {
 		glVertex3f(v6X, v6Y, v6Z);
 		glTexCoord2f(1.0, 1.0);
 		glVertex3f(v5X, v5Y, v5Z);
-		
+
+		glNormal3f(normals.points[i].x, normals.points[i].y, normals.points[i].z);
 		// left side face
 		glTexCoord2f(1.0, 0.0);
 		glVertex3f(v2X, v2Y, v2Z);
@@ -579,6 +605,7 @@ void myInit() {
 		glTexCoord2f(1.0, 1.0);
 		glVertex3f(v6X, v6Y, v6Z);
 
+		glNormal3f(binormals.points[i].x, binormals.points[i].y, binormals.points[i].z);
 		// bottom face
 		glTexCoord2f(1.0, 0.0);
 		glVertex3f(v0X, v0Y, v0Z);
@@ -623,7 +650,6 @@ void myInit() {
 		glVertex3f(v7X2, v7Y2, v7Z2);
 		glTexCoord2f(1.0, 1.0);
 		glVertex3f(v6X2, v6Y2, v6Z2);
-
 
 		// bottom face
 		glTexCoord2f(1.0, 0.0);
@@ -772,14 +798,14 @@ void renderSpline() {
 void animateRide() {
 
 	// make sure the point count does not go out of range
-	if (pointCount == rollercoasterSpline.numControlPoints - 100) {
+	if (pointCount == rollercoasterSpline.numControlPoints) {
 		pointCount = 0;
 	}
 	pointCount++;
 
 	// set the eye coordinates of the camera to the position
 	// where the rollercoaster cart would be on the track
-	eyeX = rollercoasterSpline.points[pointCount].x + .4;
+	eyeX = rollercoasterSpline.points[pointCount].x;
 	eyeY = rollercoasterSpline.points[pointCount].y;
 	eyeZ = rollercoasterSpline.points[pointCount].z + .5;
 
@@ -793,13 +819,14 @@ void animateRide() {
 	centerY = yTan + eyeY;
 	centerZ = zTan + eyeZ;
 
-	
+
 	double xNorm = normals.points[pointCount].x;
 	double yNorm = normals.points[pointCount].y;
 	double zNorm = normals.points[pointCount].z;
 
 	std::cout << "Count : " << pointCount << " - ";
 
+	std::cout << "Point ( " << eyeX << ", " << eyeY << ", " << eyeZ - .5 << " )  ";
 	std::cout << "Tangent ( " << xTan << ", " << yTan << ", " << zTan << " )  ";
 	std::cout << "Normal ( " << xNorm << ", " << yNorm << ", " << zNorm << " )  ";
 	std::cout << "Binormal ( " << binormals.points[pointCount].x << ", " << binormals.points[pointCount].y << ", " << binormals.points[pointCount].z << " )" << std::endl << std::endl;

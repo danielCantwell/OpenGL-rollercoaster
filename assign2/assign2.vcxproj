@@ -100,6 +100,7 @@
   <ItemGroup>
     <Image Include="dirtTexture.jpg" />
     <Image Include="grassTexture.jpg" />
+    <Image Include="metalTexture.jpg" />
     <Image Include="skyPic.jpeg" />
     <Image Include="skyTexture.jpg" />
     <Image Include="skytop.jpg" />
