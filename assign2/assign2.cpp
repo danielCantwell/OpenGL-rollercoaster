@@ -688,13 +688,13 @@ void renderGround() {
 	glBegin(GL_QUADS);
 
 	glTexCoord2f(0.0, 0.0);
-	glVertex3f(0.0, 0.0, -1.0);
-	glTexCoord2f(0.0, 30.0);
-	glVertex3f(0.0, 50.0, -1.0);
-	glTexCoord2f(30.0, 0.0);
-	glVertex3f(50.0, 50.0, -1.0);
-	glTexCoord2f(30.0, 30.0);
-	glVertex3f(50.0, 0.0, -1.0);
+	glVertex3f(-50.0, -50.0, -1.0);
+	glTexCoord2f(0.0, 50.0);
+	glVertex3f(-50.0, 100.0, -1.0);
+	glTexCoord2f(50.0, 0.0);
+	glVertex3f(100.0, 100.0, -1.0);
+	glTexCoord2f(50.0, 50.0);
+	glVertex3f(100.0, -50.0, -1.0);
 
 	glEnd();
 
@@ -717,43 +717,43 @@ void renderSky() {
 
 	// quad side one
 	glTexCoord2f(1.0, 1.0);
-	glVertex3f(0.0, 0.0, -1.0);
+	glVertex3f(-50.0, -50.0, -1.0);
 	glTexCoord2f(0.0, 1.0);
-	glVertex3f(50.0, 0.0, -1.0);
+	glVertex3f(100.0, -50.0, -1.0);
 	glTexCoord2f(0.0, 0.0);
-	glVertex3f(50.0, 0.0, 50.0);
+	glVertex3f(100.0, -50.0, 100.0);
 	glTexCoord2f(1.0, 0.0);
-	glVertex3f(0.0, 0.0, 50.0);
+	glVertex3f(-50.0, -50.0, 100.0);
 
 	// quad side two
 	glTexCoord2f(1.0, 1.0);
-	glVertex3f(0.0, 0.0, -1.0);
+	glVertex3f(-50.0, -50.0, -1.0);
 	glTexCoord2f(0.0, 1.0);
-	glVertex3f(0.0, 50.0, -1.0);
+	glVertex3f(-50.0, 100.0, -1.0);
 	glTexCoord2f(0.0, 0.0);
-	glVertex3f(0.0, 50.0, 50.0);
+	glVertex3f(-50.0, 100.0, 100.0);
 	glTexCoord2f(1.0, 0.0);
-	glVertex3f(0.0, 0.0, 50.0);
+	glVertex3f(-50.0, -50.0, 100.0);
 
 	// quad side three
 	glTexCoord2f(1.0, 1.0);
-	glVertex3f(0.0, 50.0, -1.0);
+	glVertex3f(-50.0, 100.0, -1.0);
 	glTexCoord2f(0.0, 1.0);
-	glVertex3f(50.0, 50.0, -1.0);
+	glVertex3f(100.0, 100.0, -1.0);
 	glTexCoord2f(0.0, 0.0);
-	glVertex3f(50.0, 50.0, 50.0);
+	glVertex3f(100.0, 100.0, 100.0);
 	glTexCoord2f(1.0, 0.0);
-	glVertex3f(0.0, 50.0, 50.0);
+	glVertex3f(-50.0, 100.0, 100.0);
 
 	// quad side four
 	glTexCoord2f(1.0, 1.0);
-	glVertex3f(50.0, 50.0, -1.0);
+	glVertex3f(100.0, 100.0, -1.0);
 	glTexCoord2f(0.0, 1.0);
-	glVertex3f(50.0, 0.0, -1.0);
+	glVertex3f(100.0, -50.0, -1.0);
 	glTexCoord2f(0.0, 0.0);
-	glVertex3f(50.0, 0.0, 50.0);
+	glVertex3f(100.0, -50.0, 100.0);
 	glTexCoord2f(1.0, 0.0);
-	glVertex3f(50.0, 50.0, 50.0);
+	glVertex3f(100.0, 100.0, 100.0);
 
 	glEnd();
 
@@ -767,13 +767,13 @@ void renderSky() {
 
 	// top of skybox
 	glTexCoord2f(1.0, 1.0);
-	glVertex3f(50.0, 50.0, 49.9);
+	glVertex3f(100.0, 100.0, 99.9);
 	glTexCoord2f(0.0, 1.0);
-	glVertex3f(50.0, -20.0, 49.9);
+	glVertex3f(100.0, -50.0, 99.9);
 	glTexCoord2f(0.0, 0.0);
-	glVertex3f(-20.0, -20.0, 49.9);
+	glVertex3f(-50.0, -50.0, 99.9);
 	glTexCoord2f(1.0, 0.0);
-	glVertex3f(-20.0, 50.0, 49.9);
+	glVertex3f(-50.0, 100.0, 99.9);
 
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
@@ -808,8 +808,8 @@ void animateRide() {
 
 	// set the eye coordinates of the camera to the position
 	// where the rollercoaster cart would be on the track
-	eyeX = rollercoasterSpline.points[pointCount].x + normals.points[pointCount].x / 8;
-	eyeY = rollercoasterSpline.points[pointCount].y + normals.points[pointCount].y / 8;
+	eyeX = rollercoasterSpline.points[pointCount].x + normals.points[pointCount].x / 7;
+	eyeY = rollercoasterSpline.points[pointCount].y + normals.points[pointCount].y / 7;
 	eyeZ = rollercoasterSpline.points[pointCount].z + .5;
 
 	double xTan = tangents.points[pointCount].x;
@@ -881,7 +881,7 @@ void reshape(int w, int h)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	/* Perspective camera view */
-	gluPerspective(60.0, aspect, .01, 100);
+	gluPerspective(60.0, aspect, .1, 1000);
 	glMatrixMode(GL_MODELVIEW);
 }
 
