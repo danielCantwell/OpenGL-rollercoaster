@@ -459,6 +459,37 @@ void myInit() {
 	theSpline = glGenLists(1);
 	glNewList(theSpline, GL_COMPILE);
 
+	/* create cross sections */
+	glBegin(GL_LINES);
+
+	for (int i = 0; i < normals.numControlPoints; i++) {
+			glVertex3f(rollercoasterSpline.points[i].x, rollercoasterSpline.points[i].y, rollercoasterSpline.points[i].z);
+			glVertex3f(rollercoasterSpline.points[i].x + normals.points[i].x / 2,
+				rollercoasterSpline.points[i].y + normals.points[i].y / 2,
+				rollercoasterSpline.points[i].z + normals.points[i].z / 2);
+	}
+
+	glEnd();
+
+	/* create support beams */
+	glBegin(GL_LINES);
+
+	for (int i = 0; i < normals.numControlPoints; i++) {
+		if (i % 20 == 0) {
+			glVertex3f(rollercoasterSpline.points[i].x, rollercoasterSpline.points[i].y, rollercoasterSpline.points[i].z);
+			glVertex3f(rollercoasterSpline.points[i].x, rollercoasterSpline.points[i].y, 0);
+
+			glVertex3f(rollercoasterSpline.points[i].x + normals.points[i].x / 2,
+				rollercoasterSpline.points[i].y + normals.points[i].y / 2,
+				rollercoasterSpline.points[i].z + normals.points[i].z / 2);
+			glVertex3f(rollercoasterSpline.points[i].x + normals.points[i].x / 2,
+				rollercoasterSpline.points[i].y + normals.points[i].y / 2,
+				0);
+		}
+	}
+
+	glEnd();
+
 	// modulate texture with lighting
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
@@ -466,18 +497,8 @@ void myInit() {
 	// turn on texture mapping
 	glEnable(GL_TEXTURE_2D);
 
-	glBegin(GL_LINES);
 
-	for (int i = 0; i < normals.numControlPoints; i++) {
-		glVertex3f(rollercoasterSpline.points[i].x, rollercoasterSpline.points[i].y, rollercoasterSpline.points[i].z);
-		glVertex3f(rollercoasterSpline.points[i].x + normals.points[i].x / 2,
-			rollercoasterSpline.points[i].y + normals.points[i].y / 2,
-			rollercoasterSpline.points[i].z + normals.points[i].z / 2);
-	}
-
-	glEnd();
-
-	/* compute the list*/
+	/* compute the spline */
 	glBegin(GL_QUADS);
 
 	double alpha = 0.05;
