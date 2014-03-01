@@ -688,13 +688,13 @@ void renderGround() {
 	glBegin(GL_QUADS);
 
 	glTexCoord2f(0.0, 0.0);
-	glVertex3f(-20.0, -20.0, -1.0);
+	glVertex3f(0.0, 0.0, -1.0);
 	glTexCoord2f(0.0, 30.0);
-	glVertex3f(-20.0, 50.0, -1.0);
+	glVertex3f(0.0, 50.0, -1.0);
 	glTexCoord2f(30.0, 0.0);
 	glVertex3f(50.0, 50.0, -1.0);
 	glTexCoord2f(30.0, 30.0);
-	glVertex3f(50.0, -20.0, -1.0);
+	glVertex3f(50.0, 0.0, -1.0);
 
 	glEnd();
 
@@ -717,41 +717,41 @@ void renderSky() {
 
 	// quad side one
 	glTexCoord2f(1.0, 1.0);
-	glVertex3f(-20.0, -20.0, -1.0);
+	glVertex3f(0.0, 0.0, -1.0);
 	glTexCoord2f(0.0, 1.0);
-	glVertex3f(50.0, -20.0, -1.0);
+	glVertex3f(50.0, 0.0, -1.0);
 	glTexCoord2f(0.0, 0.0);
-	glVertex3f(50.0, -20.0, 50.0);
+	glVertex3f(50.0, 0.0, 50.0);
 	glTexCoord2f(1.0, 0.0);
-	glVertex3f(-20.0, -20.0, 50.0);
+	glVertex3f(0.0, 0.0, 50.0);
 
 	// quad side two
 	glTexCoord2f(1.0, 1.0);
-	glVertex3f(-20.0, -20.0, -1.0);
+	glVertex3f(0.0, 0.0, -1.0);
 	glTexCoord2f(0.0, 1.0);
-	glVertex3f(-20.0, 50.0, -1.0);
+	glVertex3f(0.0, 50.0, -1.0);
 	glTexCoord2f(0.0, 0.0);
-	glVertex3f(-20.0, 50.0, 50.0);
+	glVertex3f(0.0, 50.0, 50.0);
 	glTexCoord2f(1.0, 0.0);
-	glVertex3f(-20.0, -20.0, 50.0);
+	glVertex3f(0.0, 0.0, 50.0);
 
 	// quad side three
 	glTexCoord2f(1.0, 1.0);
-	glVertex3f(-20.0, 50.0, -1.0);
+	glVertex3f(0.0, 50.0, -1.0);
 	glTexCoord2f(0.0, 1.0);
 	glVertex3f(50.0, 50.0, -1.0);
 	glTexCoord2f(0.0, 0.0);
 	glVertex3f(50.0, 50.0, 50.0);
 	glTexCoord2f(1.0, 0.0);
-	glVertex3f(-20.0, 50.0, 50.0);
+	glVertex3f(0.0, 50.0, 50.0);
 
 	// quad side four
 	glTexCoord2f(1.0, 1.0);
 	glVertex3f(50.0, 50.0, -1.0);
 	glTexCoord2f(0.0, 1.0);
-	glVertex3f(50.0, -20.0, -1.0);
+	glVertex3f(50.0, 0.0, -1.0);
 	glTexCoord2f(0.0, 0.0);
-	glVertex3f(50.0, -20.0, 50.0);
+	glVertex3f(50.0, 0.0, 50.0);
 	glTexCoord2f(1.0, 0.0);
 	glVertex3f(50.0, 50.0, 50.0);
 
@@ -801,8 +801,8 @@ void renderSpline() {
 void animateRide() {
 
 	// make sure the point count does not go out of range
-	if (pointCount == rollercoasterSpline.numControlPoints) {
-		pointCount = 0;
+	if (pointCount == rollercoasterSpline.numControlPoints - 77) {
+		pointCount = 19;
 	}
 	pointCount++;
 
@@ -826,14 +826,14 @@ void animateRide() {
 	upX = -binormals.points[pointCount].x;
 	upY = -binormals.points[pointCount].y;
 	upZ = -binormals.points[pointCount].z;
-	/*
-		std::cout << "Count : " << pointCount << " - ";
 
-		std::cout << "Point ( " << eyeX << ", " << eyeY << ", " << eyeZ - .5 << " )  ";
-		std::cout << "Tangent ( " << xTan << ", " << yTan << ", " << zTan << " )  ";
-		std::cout << "Normal ( " << xNorm << ", " << yNorm << ", " << zNorm << " )  ";
-		std::cout << "Binormal ( " << binormals.points[pointCount].x << ", " << binormals.points[pointCount].y << ", " << binormals.points[pointCount].z << " )" << std::endl << std::endl;
-		*/
+	std::cout << "Count : " << pointCount << " - ";
+
+	std::cout << "Point ( " << eyeX << ", " << eyeY << ", " << eyeZ - .5 << " )  ";
+	std::cout << "Tangent ( " << xTan << ", " << yTan << ", " << zTan << " )  ";
+	std::cout << "Normal ( " << upX << ", " << upY << ", " << upZ << " )  ";
+	std::cout << "Binormal ( " << binormals.points[pointCount].x << ", " << binormals.points[pointCount].y << ", " << binormals.points[pointCount].z << " )" << std::endl << std::endl;
+
 }
 
 /***** DISPLAY FUNCTION *****/
