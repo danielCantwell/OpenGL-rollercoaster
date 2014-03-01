@@ -217,11 +217,11 @@ void calculateNormalsAndBinormals() {
 	double xNorm = (yTan * arbitraryZ) - (zTan * arbitraryY);
 	double yNorm = (zTan * arbitraryX) - (xTan * arbitraryZ);
 	double zNorm = (xTan * arbitraryY) - (yTan * arbitraryX);
-/*
-	double xNorm = (arbitraryY * zTan) - (arbitraryZ * yTan);
-	double yNorm = (arbitraryZ * xTan) - (arbitraryX * zTan);
-	double zNorm = (arbitraryX * yTan) - (arbitraryY * xTan);
-*/
+	/*
+		double xNorm = (arbitraryY * zTan) - (arbitraryZ * yTan);
+		double yNorm = (arbitraryZ * xTan) - (arbitraryX * zTan);
+		double zNorm = (arbitraryX * yTan) - (arbitraryY * xTan);
+		*/
 	// calculate the magnitude of the normal vector for normalization
 	double normalMagnitude = sqrt((xNorm*xNorm) + (yNorm*yNorm) + (zNorm*zNorm));
 	// normalize the normal vector
@@ -470,10 +470,9 @@ void myInit() {
 
 	for (int i = 0; i < normals.numControlPoints; i++) {
 		glVertex3f(rollercoasterSpline.points[i].x, rollercoasterSpline.points[i].y, rollercoasterSpline.points[i].z);
-		glVertex3f(rollercoasterSpline.points[i].x + binormals.points[i].x, rollercoasterSpline.points[i].y + binormals.points[i].y, rollercoasterSpline.points[i].z + binormals.points[i].z);
-		
-		glVertex3f(rollercoasterSpline.points[i].x, rollercoasterSpline.points[i].y, rollercoasterSpline.points[i].z);
-		glVertex3f(rollercoasterSpline.points[i].x + normals.points[i].x, rollercoasterSpline.points[i].y + normals.points[i].y, rollercoasterSpline.points[i].z + normals.points[i].z);
+		glVertex3f(rollercoasterSpline.points[i].x + normals.points[i].x / 2,
+			rollercoasterSpline.points[i].y + normals.points[i].y / 2,
+			rollercoasterSpline.points[i].z + normals.points[i].z / 2);
 	}
 
 	glEnd();
@@ -536,39 +535,39 @@ void myInit() {
 		double v7Z = pointZ2 - alpha*(normZ2 + binZ2);
 
 		// // // RAIL TWO // // //
-		
-		double v0X2 = pointX - alpha*normX + 2 * binX;
-		double v0Y2 = pointY - alpha*normY + 2 * binY;
-		double v0Z2 = pointZ - alpha*normZ + 2 * binZ;
 
-		double v1X2 = pointX + alpha*normX + 2 * binX;
-		double v1Y2 = pointY + alpha*normY + 2 * binY;
-		double v1Z2 = pointZ + alpha*normZ + 2 * binZ;
+		double v0X2 = pointX - alpha*(-8 * normX - binX);
+		double v0Y2 = pointY - alpha*(-8 * normY - binY);
+		double v0Z2 = pointZ - alpha*(-8 * normZ - binZ);
 
-		double v2X2 = pointX + alpha*normX + binX;
-		double v2Y2 = pointY + alpha*normY + binY;
-		double v2Z2 = pointZ + alpha*normZ + binZ;
+		double v1X2 = pointX + alpha*(10 * normX + binX);
+		double v1Y2 = pointY + alpha*(10 * normY + binY);
+		double v1Z2 = pointZ + alpha*(10 * normZ + binZ);
 
-		double v3X2 = pointX - alpha*normX + binX;
-		double v3Y2 = pointY - alpha*normY + binY;
-		double v3Z2 = pointZ - alpha*normZ + binZ;
+		double v2X2 = pointX + alpha*(10 * normX - binX);
+		double v2Y2 = pointY + alpha*(10 * normY - binY);
+		double v2Z2 = pointZ + alpha*(10 * normZ - binZ);
 
-		double v4X2 = pointX2 - alpha*normX2 + 2 * binX2;
-		double v4Y2 = pointY2 - alpha*normY2 + 2 * binY2;
-		double v4Z2 = pointZ2 - alpha*normZ2 + 2 * binZ2;
+		double v3X2 = pointX - alpha*(-8 * normX + binX);
+		double v3Y2 = pointY - alpha*(-8 * normY + binY);
+		double v3Z2 = pointZ - alpha*(-8 * normZ + binZ);
 
-		double v5X2 = pointX2 + alpha*normX2 + 2 * binX2;
-		double v5Y2 = pointY2 + alpha*normY2 + 2 * binY2;
-		double v5Z2 = pointZ2 + alpha*normZ2 + 2 * binZ2;
+		double v4X2 = pointX2 - alpha*(-8 * normX2 - binX2);
+		double v4Y2 = pointY2 - alpha*(-8 * normY2 - binY2);
+		double v4Z2 = pointZ2 - alpha*(-8 * normZ2 - binZ2);
 
-		double v6X2 = pointX2 + alpha*normX2 + binX2;
-		double v6Y2 = pointY2 + alpha*normY2 + binY2;
-		double v6Z2 = pointZ2 + alpha*normZ2 + binZ2;
+		double v5X2 = pointX2 + alpha*(10 * normX2 + binX2);
+		double v5Y2 = pointY2 + alpha*(10 * normY2 + binY2);
+		double v5Z2 = pointZ2 + alpha*(10 * normZ2 + binZ2);
 
-		double v7X2 = pointX2 - alpha*normX2 + binX2;
-		double v7Y2 = pointY2 - alpha*normY2 + binY2;
-		double v7Z2 = pointZ2 - alpha*normZ2 + binZ2;
-		
+		double v6X2 = pointX2 + alpha*(10 * normX2 - binX2);
+		double v6Y2 = pointY2 + alpha*(10 * normY2 - binY2);
+		double v6Z2 = pointZ2 + alpha*(10 * normZ2 - binZ2);
+
+		double v7X2 = pointX2 - alpha*(-8 * normX2 + binX2);
+		double v7Y2 = pointY2 - alpha*(-8 * normY2 + binY2);
+		double v7Z2 = pointZ2 - alpha*(-8 * normZ2 + binZ2);
+
 		// // // // // // // // //
 
 
@@ -620,7 +619,8 @@ void myInit() {
 
 		// // // RAIL TWO // // //
 		// // // // // // // // //
-		
+
+		glNormal3f(-normals.points[i].x, -normals.points[i].y, -normals.points[i].z);
 		// right side face
 		glTexCoord2f(1.0, 0.0);
 		glVertex3f(v0X2, v0Y2, v0Z2);
@@ -631,6 +631,7 @@ void myInit() {
 		glTexCoord2f(1.0, 1.0);
 		glVertex3f(v4X2, v4Y2, v4Z2);
 
+		glNormal3f(-binormals.points[i].x, -binormals.points[i].y, -binormals.points[i].z);
 		// top face
 		glTexCoord2f(1.0, 0.0);
 		glVertex3f(v1X2, v1Y2, v1Z2);
@@ -641,6 +642,7 @@ void myInit() {
 		glTexCoord2f(1.0, 1.0);
 		glVertex3f(v5X2, v5Y2, v5Z2);
 
+		glNormal3f(normals.points[i].x, normals.points[i].y, normals.points[i].z);
 		// left side face
 		glTexCoord2f(1.0, 0.0);
 		glVertex3f(v2X2, v2Y2, v2Z2);
@@ -651,6 +653,7 @@ void myInit() {
 		glTexCoord2f(1.0, 1.0);
 		glVertex3f(v6X2, v6Y2, v6Z2);
 
+		glNormal3f(binormals.points[i].x, binormals.points[i].y, binormals.points[i].z);
 		// bottom face
 		glTexCoord2f(1.0, 0.0);
 		glVertex3f(v0X2, v0Y2, v0Z2);
@@ -660,7 +663,7 @@ void myInit() {
 		glVertex3f(v7X2, v7Y2, v7Z2);
 		glTexCoord2f(1.0, 1.0);
 		glVertex3f(v4X2, v4Y2, v4Z2);
-		
+
 	}
 	glDisable(GL_TEXTURE_2D);
 	glEnd();
@@ -805,8 +808,8 @@ void animateRide() {
 
 	// set the eye coordinates of the camera to the position
 	// where the rollercoaster cart would be on the track
-	eyeX = rollercoasterSpline.points[pointCount].x;
-	eyeY = rollercoasterSpline.points[pointCount].y;
+	eyeX = rollercoasterSpline.points[pointCount].x + normals.points[pointCount].x / 8;
+	eyeY = rollercoasterSpline.points[pointCount].y + normals.points[pointCount].y / 8;
 	eyeZ = rollercoasterSpline.points[pointCount].z + .5;
 
 	double xTan = tangents.points[pointCount].x;
@@ -820,20 +823,17 @@ void animateRide() {
 	centerZ = zTan + eyeZ;
 
 
-	double xNorm = normals.points[pointCount].x;
-	double yNorm = normals.points[pointCount].y;
-	double zNorm = normals.points[pointCount].z;
+	upX = -binormals.points[pointCount].x;
+	upY = -binormals.points[pointCount].y;
+	upZ = -binormals.points[pointCount].z;
+	/*
+		std::cout << "Count : " << pointCount << " - ";
 
-	std::cout << "Count : " << pointCount << " - ";
-
-	std::cout << "Point ( " << eyeX << ", " << eyeY << ", " << eyeZ - .5 << " )  ";
-	std::cout << "Tangent ( " << xTan << ", " << yTan << ", " << zTan << " )  ";
-	std::cout << "Normal ( " << xNorm << ", " << yNorm << ", " << zNorm << " )  ";
-	std::cout << "Binormal ( " << binormals.points[pointCount].x << ", " << binormals.points[pointCount].y << ", " << binormals.points[pointCount].z << " )" << std::endl << std::endl;
-
-	//upX = xNorm;
-	//upY = yNorm;
-	//upZ = zNorm;
+		std::cout << "Point ( " << eyeX << ", " << eyeY << ", " << eyeZ - .5 << " )  ";
+		std::cout << "Tangent ( " << xTan << ", " << yTan << ", " << zTan << " )  ";
+		std::cout << "Normal ( " << xNorm << ", " << yNorm << ", " << zNorm << " )  ";
+		std::cout << "Binormal ( " << binormals.points[pointCount].x << ", " << binormals.points[pointCount].y << ", " << binormals.points[pointCount].z << " )" << std::endl << std::endl;
+		*/
 }
 
 /***** DISPLAY FUNCTION *****/
