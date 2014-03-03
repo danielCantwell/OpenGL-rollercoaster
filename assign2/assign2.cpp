@@ -16,6 +16,7 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 #include <math.h>
+#include <time.h>
 
 /* represents one control point along the spline */
 struct point {
@@ -71,6 +72,12 @@ GLfloat mat_a[] = { 0.3, 0.3, 0.3, 1.0 };
 GLfloat mat_d[] = { 0.3, 0.3, 0.3, 1.0 };
 GLfloat mat_s[] = { 1.0, 1.0, 1.0, 1.0 };
 GLfloat low_sh[] = { 2.0 };
+
+
+bool animate = false;
+int screenShotCount = 0;
+clock_t t;
+const float MAX_COUNT = 290;
 
 
 int loadSplines(char *argv) {
@@ -443,6 +450,8 @@ void initMaterials() {
 /* openGL init */
 void myInit() {
 
+	t = clock();
+
 	/* Enable a single OpenGL light. */
 	initLighting();
 	initMaterials();
@@ -463,10 +472,10 @@ void myInit() {
 	glBegin(GL_LINES);
 
 	for (int i = 0; i < normals.numControlPoints; i++) {
-			glVertex3f(rollercoasterSpline.points[i].x, rollercoasterSpline.points[i].y, rollercoasterSpline.points[i].z);
-			glVertex3f(rollercoasterSpline.points[i].x + normals.points[i].x / 2,
-				rollercoasterSpline.points[i].y + normals.points[i].y / 2,
-				rollercoasterSpline.points[i].z + normals.points[i].z / 2);
+		glVertex3f(rollercoasterSpline.points[i].x, rollercoasterSpline.points[i].y, rollercoasterSpline.points[i].z);
+		glVertex3f(rollercoasterSpline.points[i].x + normals.points[i].x / 2,
+			rollercoasterSpline.points[i].y + normals.points[i].y / 2,
+			rollercoasterSpline.points[i].z + normals.points[i].z / 2);
 	}
 
 	glEnd();
@@ -821,40 +830,53 @@ void renderSpline() {
 // setting camera values for animation
 void animateRide() {
 
-	// make sure the point count does not go out of range
-	if (pointCount == rollercoasterSpline.numControlPoints - 77) {
-		pointCount = 19;
+	clock_t newT = clock() - t;
+	float sec = ((float)newT) / CLOCKS_PER_SEC;
+	if ((sec > 0.04)) {
+
+		// make sure the point count does not go out of range
+		if (pointCount == rollercoasterSpline.numControlPoints - 77) {
+			pointCount = 19;
+		}
+		pointCount++;
+
+		// set the eye coordinates of the camera to the position
+		// where the rollercoaster cart would be on the track
+		eyeX = rollercoasterSpline.points[pointCount].x + normals.points[pointCount].x / 4;
+		eyeY = rollercoasterSpline.points[pointCount].y + normals.points[pointCount].y / 4;
+		eyeZ = rollercoasterSpline.points[pointCount].z + .5;
+
+		double xTan = tangents.points[pointCount].x;
+		double yTan = tangents.points[pointCount].y;
+		double zTan = tangents.points[pointCount].z;
+
+		// set the center coordinates of the camera to where
+		// it should be looking from the cart, based on the unit tangent vector
+		centerX = xTan + eyeX;
+		centerY = yTan + eyeY;
+		centerZ = zTan + eyeZ;
+
+
+		upX = -binormals.points[pointCount].x;
+		upY = -binormals.points[pointCount].y;
+		upZ = -binormals.points[pointCount].z;
+/*
+		std::cout << "Count : " << pointCount << " - ";
+		std::cout << "Point ( " << eyeX << ", " << eyeY << ", " << eyeZ - .5 << " )  ";
+		std::cout << "Tangent ( " << xTan << ", " << yTan << ", " << zTan << " )  ";
+		std::cout << "Normal ( " << upX << ", " << upY << ", " << upZ << " )  ";
+		std::cout << "Binormal ( " << binormals.points[pointCount].x << ", " << binormals.points[pointCount].y << ", " << binormals.points[pointCount].z << " )" << std::endl << std::endl;
+*/
+		t = clock();
 	}
-	pointCount++;
-
-	// set the eye coordinates of the camera to the position
-	// where the rollercoaster cart would be on the track
-	eyeX = rollercoasterSpline.points[pointCount].x + normals.points[pointCount].x / 7;
-	eyeY = rollercoasterSpline.points[pointCount].y + normals.points[pointCount].y / 7;
-	eyeZ = rollercoasterSpline.points[pointCount].z + .5;
-
-	double xTan = tangents.points[pointCount].x;
-	double yTan = tangents.points[pointCount].y;
-	double zTan = tangents.points[pointCount].z;
-
-	// set the center coordinates of the camera to where
-	// it should be looking from the cart, based on the unit tangent vector
-	centerX = xTan + eyeX;
-	centerY = yTan + eyeY;
-	centerZ = zTan + eyeZ;
-
-
-	upX = -binormals.points[pointCount].x;
-	upY = -binormals.points[pointCount].y;
-	upZ = -binormals.points[pointCount].z;
-
-	std::cout << "Count : " << pointCount << " - ";
-
-	std::cout << "Point ( " << eyeX << ", " << eyeY << ", " << eyeZ - .5 << " )  ";
-	std::cout << "Tangent ( " << xTan << ", " << yTan << ", " << zTan << " )  ";
-	std::cout << "Normal ( " << upX << ", " << upY << ", " << upZ << " )  ";
-	std::cout << "Binormal ( " << binormals.points[pointCount].x << ", " << binormals.points[pointCount].y << ", " << binormals.points[pointCount].z << " )" << std::endl << std::endl;
-
+	/*
+	if (screenShotCount < MAX_COUNT) {
+		screenShotCount++;
+		char c[20];
+		_itoa_s(screenShotCount, c, 10);
+		//saveScreenshot(c);
+	}
+	*/
 }
 
 /***** DISPLAY FUNCTION *****/
@@ -867,17 +889,15 @@ void display()
 
 	glLoadIdentity();
 
-	//animateRide();
+	if (animate) {
+		animateRide();
+	}
 
 	/* camera view */
 	gluLookAt(eyeX, eyeY, eyeZ,
 		centerX, centerY, centerZ,
 		upX, upY, upZ);
-	/* Move Camera - camera points along the tangent vector of the curve
-		t(u) = unit(f'(u)) = unit([3u^2 2u 1 0] M C) */
-	/* Establish a local coord system for each point on the curve*/
-	/* T tangent, N, B   -- make camera up vector = N or B
-
+	/*
 	Camera Speed - extra credit - realistic in terms of gravity
 	u_new = u_current + (delta(t)) * sq(2g(h_max - h))/||dp/du||
 	h_max = max height anywhere on the rollercoaster + a tiny bit
@@ -1007,7 +1027,7 @@ void keySpecial(int key, int x, int y)
 		}
 		break;
 	case GLUT_KEY_PAGE_DOWN:
-		animateRide();
+		animate = !animate;
 		break;
 	}
 }
